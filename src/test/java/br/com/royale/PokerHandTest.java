@@ -218,13 +218,12 @@ public class PokerHandTest {
         TextTable tt = new TextTable(columnNames, matrix);
         // adiciona numeros ao lado esquerdo de cada coluna
         tt.setAddRowNumbering(true);
-        // sort pela primeira coluna
+        // sort pela terceira coluna
         tt.setSort(2);
         tt.printTable();
     }
 
-    private void Hand1VSHand2Test(String descricao, PokerHand.Result expected, String pokerHand1, String pokerHand2)
-    {
+    private void Hand1VSHand2Test(String descricao, PokerHand.Result expected, String pokerHand1, String pokerHand2) {
         assertEquals(descricao + ":", expected.toString(), new PokerHand(pokerHand1).compareWith(new PokerHand(pokerHand2)).toString());
     }
 }
