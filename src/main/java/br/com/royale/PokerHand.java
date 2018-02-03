@@ -4,43 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
-
-/*
-Boa tarde, Iago.
-
-
-Todos os testes passaram com sucesso, entretanto, os seguintes problemas foram encontrados:
-
-- Os testes deveriam utilizar assert para fazer a verificação real dos resultados. Foi necessário pegar a tabela gerada e comparar com os resultados esperados para verificar se os testes estavam passando.
-- Houve uso direto do ArrayList na definição de variáveis e parâmetros de métodos. Sempre deve-se dar preferência para utilizar uma abstração no lugar da classe concreta (List ou Collection nesse caso). Código criado utilizando a implementação no lugar da interface acaba ficando acoplado a essa implementação. Um exemplo seria um método que recebe uma ArrayList. Caso uma outra parte do código tivesse um LinkedList, seria necessário converter para ArrayList para invocar tal método.
-- Não foi criada uma abstração para representar uma Carta (a qual teria seu valor e naipe). Ao invés disso, as cartas foram mantidas como texto. Além disso gerar um problema de representação, também gera muitos dos problemas subsequentes.
-- Os atributos expostos por uma PokerHand (através de getter) ficaram confusos. Para o restante do código, uma PokerHand tem um construtor que aceita String e dois atributos: rank (inteiro) e maiores naipes (uma lista de inteiros). Isso demonstra mais um problema de representação, dessa vez do objeto PokerHand. O que se esperaria de uma mão de poker seria um atributo com uma coleção de cartas presentes nela. Poderia também possuir um atributo com sua categoria (royal flush, dupla, etc.).
-- Foi utilizado inteiro para representar o "rank" da carta. Dessa forma, fica confuso para ler códigos que manipulem essa variável, visto que deve-se consultar o construtor ou os comentários para saber o que cada número se refere. Deve-se notar que o código deve ser claro o suficiente sem que sejam necessários comentários. Os comentários deveriam ser exceção, utilizados apenas para esclarecer casos mais complexos e não para identificar o que significa o que é um valor de uma variável.
-- O método compare() recebe desnecessariamente o tamanho das listas. Visto que ele é invocado apenas em caso de empate de categoria, é esperado que as listas possuam o mesmo tamanho.
-- Houve muita repetição de código e quase nenhuma reutilização de código (exceto pelo teste de isStraight e isFlush). Cada método verificava manualmente utilizando índices fixos cada possível combinação dos tipos. Isso gerou repetição de código até dentro de um mesmo código. Um exemplo é o isTrinca(), que tem exatamente o mesmo código três vezes, mudando apenas os índices utilizados. Isso se repetiu em praticamente todos os métodos, ficando ainda mais evidente no método isUmPar(), que repete o mesmo código quatro vezes. Além dessa repetição interna nos métodos, não foi reutilizado código para decidir as categorias. Vale notar que existem apenas três lógicas globais para decidir se uma mão de poker está em uma categoria: straight, flush e grupo (cartas de mesmo naipe). Logo, se fossem criados métodos com essas três lógicas, todos os outros métodos ficariam muito mais simples. O método de quadra poderia verificar se existe um grupo de 4 cartas, o de duas duplas verificaria se existem 2 grupos de 2 cartas, o de full house verificaria se existe um grupo de 2 cartas e um grupo de 3 cartas, etc. Logo, havia muita oportunidade para reutilização de código.
-- Sobre o uso direto de índices nas categorias, ainda vale lembrar que existem formas mais eficientes e legíveis de se fazer operações em coleções. Recomenda-se o uso de Stream do Java 8 ou técnicas parecidas. Um exemplo seria o uso do groupBy() que automaticamente agrupa objetos de uma lista baseado em um dos atributos.
-
-
-use streams do java8
-faça metodos pequenos e com responsabilidades bem divididas
-crie a classe Card rsrsrs
-no mais é isso que eu te aconselharia
-pense em manutenabilidade e facilidade de evoluir a solução
-com esses parametros vc vai fazer um bom código
-
-ahhh
-tem uma coisa
-use interfaces cara
-principalmente pra referenciar estrutura de dados
-c tava usando ArrayList pra declarar variavel
-não faça isso
-rsrsrsrs
-
-*/
-
-
 
 public class PokerHand {
 
@@ -70,9 +34,8 @@ public class PokerHand {
 
     // Armazena as cartas depois do split da string para melhor manipulação
     private String[] cartas;
-    private final Collection<Carta> hand;
 
-    private CategoriaPokerHandEnum categoriaPokerHandEnum;
+    private int rank;
     // quarda os tipos de cartas descendentemente
     private ArrayList < Integer > maioresNaipes = new ArrayList < Integer > ();
 
@@ -354,12 +317,12 @@ public class PokerHand {
     public Result compareWith(PokerHand hand) {
 
         // Verifica se o rank da primeira mão é maior que a passada por parametro
-        if (this.categoriaPokerHandEnum.getRank() > hand.categoriaPokerHandEnum.getRank()) {
+        if (this.rank > hand.getRank()) {
             return Result.WIN;
-        } else if (this.categoriaPokerHandEnum.getRank() < hand.categoriaPokerHandEnum.getRank()) {
+        } else if (this.rank < hand.getRank()) {
             return Result.LOSS;
         } else {
-            switch (this.categoriaPokerHandEnum) {
+            switch (this.rank) {
                 case 8:
                 case 4:
                     // No caso Straight Flush, Straight or Flush
@@ -397,6 +360,11 @@ public class PokerHand {
             }
 
         });
+    }
+
+
+    public int getRank() {
+        return this.rank;
     }
 
 

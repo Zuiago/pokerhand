@@ -1,114 +1,138 @@
 package br.com.royale;
 
 import dnl.utils.text.table.TextTable;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
 public class PokerHandTest {
-    private PokerHand.Result perdeu = PokerHand.Result.LOSS;
-    private PokerHand.Result ganhou = PokerHand.Result.WIN;
-    private PokerHand.Result empate = PokerHand.Result.DRAW;
+
+    private final ByteArrayOutputStream conteudoDeSaida = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream conteudoDeErro = new ByteArrayOutputStream();
+
+    @Before
+    public void setUp() {
+//        System.setOut(new PrintStream(conteudoDeSaida));
+//        System.setErr(new PrintStream(conteudoDeErro));
+    }
+
+    @After
+    public void tearDown() {
+//        System.setOut(System.out);
+//        System.setErr(System.err);
+    }
+
+    private ResultEnum perdeu = ResultEnum.LOSS;
+    private ResultEnum ganhou = ResultEnum.WIN;
+    private ResultEnum empate = ResultEnum.DRAW;
 
     @Test
-    public void MaiorStraightFlushGanha(){
+    public void MaiorStraightFlushGanha() {
         Hand1VSHand2Test("Maior straight flush ganha", perdeu, "2H 3H 4H 5H 6H", "KS AS TS QS JS");
     }
 
     @Test
-    public void StraightFlushGanhaDeQuadra(){
+    public void StraightFlushGanhaDeQuadra() {
         Hand1VSHand2Test("Straight flush ganha de quadra", ganhou, "2H 3H 4H 5H 6H", "AS AD AC AH JD");
     }
 
     @Test
-    public void MaiorQuadraGanha(){
+    public void MaiorQuadraGanha() {
         Hand1VSHand2Test("Maior quadra ganha", ganhou, "AS AH 2H AD AC", "JS JD JC JH 3D");
     }
 
     @Test
-    public void QuadraGanhaDeFullHouse(){
+    public void QuadraGanhaDeFullHouse() {
         Hand1VSHand2Test("Quadra ganha de full house", perdeu, "2S AH 2H AS AC", "JS JD JC JH AD");
     }
 
     @Test
-    public void FullHouseGanhaDeFlush(){
+    public void FullHouseGanhaDeFlush() {
         Hand1VSHand2Test("Full house ganha de flush", ganhou, "2S AH 2H AS AC", "2H 3H 5H 6H 7H");
     }
 
     @Test
-    public void MaiorFlushGanha(){
+    public void MaiorFlushGanha() {
         Hand1VSHand2Test("Maior flush ganha", ganhou, "AS 3S 4S 8S 2S", "2H 3H 5H 6H 7H");
     }
 
     @Test
-    public void FlushGanhaDeStraight(){
+    public void FlushGanhaDeStraight() {
         Hand1VSHand2Test("Flush ganha de straight", ganhou, "2H 3H 5H 6H 7H", "2S 3H 4H 5S 6C");
     }
 
     @Test
-    public void StraightIguaisEmpatam(){
+    public void StraightIguaisEmpatam() {
         Hand1VSHand2Test("Straight iguais empatam", empate, "2S 3H 4H 5S 6C", "3D 4C 5H 6H 2S");
     }
 
     @Test
-    public void StraightGanhaDeTrinca(){
+    public void StraightGanhaDeTrinca() {
         Hand1VSHand2Test("Straight ganha de trinca", ganhou, "2S 3H 4H 5S 6C", "AH AC 5H 6H AS");
     }
 
     @Test
-    public void TrincaGanhaDeDoisPares(){
+    public void TrincaGanhaDeDoisPares() {
         Hand1VSHand2Test("Trinca ganha de dois pares", perdeu, "2S 2H 4H 5S 4C", "AH AC 5H 6H AS");
     }
 
     @Test
-    public void DoisParesGanhaDeUmPar(){
+    public void DoisParesGanhaDeUmPar() {
         Hand1VSHand2Test("2 Pares ganham de um par", ganhou, "2S 2H 4H 5S 4C", "AH AC 5H 6H 7S");
     }
 
     @Test
-    public void MaiorParGanha(){
+    public void MaiorParGanha() {
         Hand1VSHand2Test("Maior par ganha", perdeu, "6S AD 7H 4S AS", "AH AC 5H 6H 7S");
     }
 
     @Test
-    public void ParGanhaDeNada(){
+    public void ParGanhaDeNada() {
         Hand1VSHand2Test("Par ganha de nada", perdeu, "2S AH 4H 5S KC", "AH AC 5H 6H 7S");
     }
 
     @Test
-    public void MaiorCartaPerde(){
+    public void MaiorCartaPerde() {
         Hand1VSHand2Test("Maior carta perde", perdeu, "2S 3H 6H 7S 9C", "7H 3C TH 6H 9S");
     }
 
     @Test
-    public void MaiorCartaGanha(){
+    public void MaiorCartaGanha() {
         Hand1VSHand2Test("Maior carta ganha", ganhou, "4S 5H 6H TS AC", "3S 5H 6H TS AC");
     }
 
     @Test
-    public void CartasIguaisEmpatam(){
+    public void CartasIguaisEmpatam() {
         Hand1VSHand2Test("Cartas iguais empatam", empate, "2S AH 4H 5S 6C", "AD 4C 5H 6H 2C");
     }
 
     @Test
-    public void Randomico1Test(){
+    public void Randomico1Test() {
         Hand1VSHand2Test("Randomico ganha", ganhou, "TS KS 5S 9S AC", "JH 8S TH AH QH");
     }
 
     @Test
-    public void Randomico2Test(){
+    public void Randomico2Test() {
         Hand1VSHand2Test("Randomico ganha", ganhou, "7C 7S KH 2H 7H", "7C 7S 3S 7H 5S");
     }
 
     @Test
-    public void Randomico3Test(){
+    public void Randomico3Test() {
         Hand1VSHand2Test("Randomico ganha", ganhou, "4C 5C 9C 8C KC", "3S 8S 9S 5S KS");
     }
 
     @Test
-    public void FullTest(){
+    public void FullTest() {
 
-        String[] pokerHand1ListCards = {
+        String[] listaCartasPokerHand1 = {
                 "9C TC JC QC KC",
                 "TC TH 5C 5H KH",
                 "TS TD KC JC 7C",
@@ -152,7 +176,7 @@ public class PokerHandTest {
         };
 
 
-        String[] pokerHand2ListCards = {
+        String[] listaCartasPokerHand2 = {
                 "9C 9H 5C 5H AC",
                 "9C 9H 5C 5H AC",
                 "JS JC AS KC TD",
@@ -195,7 +219,48 @@ public class PokerHandTest {
                 "KS JS 5S 8S QS",
         };
 
-
+        ResultEnum[] listaRestulatos = {
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.LOSS,
+                ResultEnum.WIN,
+                ResultEnum.LOSS,
+                ResultEnum.LOSS,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.LOSS,
+                ResultEnum.WIN,
+                ResultEnum.LOSS,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.LOSS,
+                ResultEnum.DRAW,
+                ResultEnum.LOSS,
+                ResultEnum.LOSS,
+                ResultEnum.LOSS,
+                ResultEnum.DRAW,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.WIN,
+                ResultEnum.LOSS,
+                ResultEnum.LOSS,
+                ResultEnum.WIN,
+        };
 
         String[] columnNames = {
                 "pokerHand1",
@@ -204,26 +269,34 @@ public class PokerHandTest {
         };
 
 
-        Object[][] matrix = new Object[35][3];
+        if (listaCartasPokerHand1.length == listaCartasPokerHand2.length) {
 
-        for (int i = 0; i < matrix.length; i++) {
+            Object[][] matrix = new Object[listaCartasPokerHand1.length][columnNames.length];
+            for (int i = 0; i < matrix.length; i++) {
+                matrix[i][0] = listaCartasPokerHand1[i];
+                matrix[i][1] = listaCartasPokerHand2[i];
+                matrix[i][2] = new PokerHandOO(listaCartasPokerHand1[i]).compareWith(new PokerHandOO(listaCartasPokerHand2[i])).toString();
+            }
+            TextTable tt = new TextTable(columnNames, matrix);
+            // adiciona numeros ao lado esquerdo de cada coluna
+            tt.setAddRowNumbering(true);
+            // sort pela terceira coluna
+            tt.setSort(2);
+            tt.printTable();
 
-            matrix[i][0] = pokerHand1ListCards[i];
-            matrix[i][1] = pokerHand2ListCards[i];
-            matrix[i][2] = new PokerHand(pokerHand1ListCards[i]).compareWith(new PokerHand(pokerHand2ListCards[i])).toString();
+
+//            for (int i = 0; i < matrix.length; i++) {
+//
+//                Hand1VSHand2Test("É esperado que", listaRestulatos[i], listaCartasPokerHand2[i], "JH 8S TH AH QH");
+//            }
 
         }
 
-
-        TextTable tt = new TextTable(columnNames, matrix);
-        // adiciona numeros ao lado esquerdo de cada coluna
-        tt.setAddRowNumbering(true);
-        // sort pela terceira coluna
-        tt.setSort(2);
-        tt.printTable();
     }
 
-    private void Hand1VSHand2Test(String descricao, PokerHand.Result expected, String pokerHand1, String pokerHand2) {
-        assertEquals(descricao + ":", expected.toString(), new PokerHand(pokerHand1).compareWith(new PokerHand(pokerHand2)).toString());
+    private void Hand1VSHand2Test(String descricao, ResultEnum expected, String pokerHand1, String pokerHand2) {
+        System.out.println(descricao + ": " + expected.toString());
+        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHandOO(pokerHand1).compareWith(new PokerHandOO(pokerHand2)).toString());
     }
+
 }
