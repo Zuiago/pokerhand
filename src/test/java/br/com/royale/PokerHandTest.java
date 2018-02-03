@@ -116,7 +116,7 @@ public class PokerHandTest {
 
     @Test
     public void Randomico1Test() {
-        Hand1VSHand2Test("Randomico ganha", ganhou, "TS KS 5S 9S AC", "JH 8S TH AH QH");
+        Hand1VSHand2Test("Randomico ganha", empate, "TH JH QH KH AH", "TC JC QC KC AC");
     }
 
     @Test
@@ -296,7 +296,8 @@ public class PokerHandTest {
 
     private void Hand1VSHand2Test(String descricao, ResultEnum expected, String pokerHand1, String pokerHand2) {
         System.out.println(descricao + ": " + expected.toString());
-        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHandOO(pokerHand1).compareWith(new PokerHandOO(pokerHand2)).toString());
+//        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHandOO(pokerHand1).compareWith(new PokerHandOO(pokerHand2)).toString());
+        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHand(pokerHand1).compareWith(new PokerHand(pokerHand2)).toString());
     }
 
 }
