@@ -2,7 +2,7 @@ package br.com.royale;
 
 public enum CategoriaPokerHandEnum {
 
-    ROYAL_FLUSH(8 ,"Royal Flush"),
+    ROYAL_FLUSH(9 ,"Royal Flush"),
     STRAIGHT_FLUSH(8 ,"Straight Flush"),
     QUADRA(7, "Quadra"),
     FULL_HOUSE(6, "Full House"),

@@ -35,8 +35,13 @@ public class PokerHandTest {
     private ResultEnum empate = ResultEnum.DRAW;
 
     @Test
-    public void MaiorStraightFlushGanha() {
-        Hand1VSHand2Test("Maior straight flush ganha", perdeu, "2H 3H 4H 5H 6H", "KS AS TS QS JS");
+    public void RoyalFlushGanhaDeFlush() {
+        Hand1VSHand2Test("Maior straight flush ganha", ganhou, "TD JD QD KD AD", "2S 8S 4S QS JS");
+    }
+
+    @Test
+    public void StraightFlushGanhaDeFlush() {
+        Hand1VSHand2Test("Maior straight flush ganha", ganhou, "2H 3H 4H 5H 6H", "2S 8S 4S QS JS");
     }
 
     @Test
@@ -50,7 +55,7 @@ public class PokerHandTest {
     }
 
     @Test
-    public void QuadraGanhaDeFullHouse() {
+    public void FullHousePerdeDeQuadra() {
         Hand1VSHand2Test("Quadra ganha de full house", perdeu, "2S AH 2H AS AC", "JS JD JC JH AD");
     }
 
@@ -296,8 +301,8 @@ public class PokerHandTest {
 
     private void Hand1VSHand2Test(String descricao, ResultEnum expected, String pokerHand1, String pokerHand2) {
         System.out.println(descricao + ": " + expected.toString());
-//        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHandOO(pokerHand1).compareWith(new PokerHandOO(pokerHand2)).toString());
-        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHand(pokerHand1).compareWith(new PokerHand(pokerHand2)).toString());
+        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHandOO(pokerHand1).compareWith(new PokerHandOO(pokerHand2)).toString());
+//        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHand(pokerHand1).compareWith(new PokerHand(pokerHand2)).toString());
     }
 
 }

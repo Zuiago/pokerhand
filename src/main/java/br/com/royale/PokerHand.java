@@ -88,7 +88,8 @@ public class PokerHand {
     }
 
     /**
-     * Verifica se são cinco cartas em sequencia do mesmo naipe.
+     * Verifica se são cinco cartas em sequencia.
+     * Cinco cartas de naipes diferentes em sequência
      * @return boolean
      */
     private boolean isStraight() {
@@ -119,11 +120,13 @@ public class PokerHand {
     }
 
     /**
-     * Verifica se a mão é categorizada como straight
+     * Verifica se a mão é categorizada como flush
+     * Cinco cartas do mesmo naipe, não em sequência
      * @return boolean
      */
     private boolean isFlush() {
         boolean isFlush = true;
+
         for (int i = 0; i < this.cartas.length - 1; i++) {
             // not the same suit
             if (!StringUtils.substring(cartas[i], 1, 2).equals(cartas[i + 1].substring(1, 2))) {

@@ -3,6 +3,13 @@ package br.com.royale;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 
 /*
 Boa tarde, Iago.
@@ -62,7 +69,6 @@ public class PokerHandOO {
             return CategoriaPokerHandEnum.ROYAL_FLUSH;
         } else if (isStraightFlush(cartas)) {
             return CategoriaPokerHandEnum.STRAIGHT_FLUSH;
-
         } else if (isQuadra(cartas)) {
             return CategoriaPokerHandEnum.QUADRA;
         } else if (isFullHouse(cartas)) {
@@ -168,12 +174,26 @@ public class PokerHandOO {
         }
     }
 
+    /**
+     * Verifica se a mão é categorizada como StraightFlush.
+     * Cinco cartas de naipes diferentes em sequência
+     * @return boolean
+     */
+    private boolean isStraightFlush(List<Carta> cartas) {
+        return isFlush(cartas) && isStraight(cartas);
+    }
+
+    /**
+     * Verifica se a mão é categorizada como Straight.
+     * Cinco cartas de naipes diferentes em sequência
+     * @return boolean
+     */
     public boolean isStraight(List<Carta> cartas) {
         int noOfCardsInARow = 0;
         int pos = 0;
         boolean isAStraight = false;
         while (pos < cartas.size() - 1 && !isAStraight) {
-            if (cartas.get(pos + 1).getRank().getPosicao() - cartas.get(pos + 1).getRank().getPosicao() == 1) {
+            if (cartas.get(pos + 1).getRank().getPosicao() - cartas.get(pos).getRank().getPosicao() == 1) {
                 noOfCardsInARow++;
                 if (noOfCardsInARow == 4) {
                     isAStraight = true;
@@ -188,28 +208,24 @@ public class PokerHandOO {
         return isAStraight;
     }
 
+    /**
+     * Verifica se a mão é categorizada como flush
+     * Cinco cartas de mesmos naipes, não em sequência
+     * @return boolean
+     */
     public boolean isFlush(List<Carta> cartas) {
-        int noOfClubs = 0;
-        int noOfSpades = 0;
-        int noOfHearts = 0;
-        int noOfDiamonds = 0;
-        for (Carta c : cartas) {
-            switch (c.getNaipe()) {
-                case HEART:
-                    noOfHearts++;
-                    break;
-                case SPADES:
-                    noOfSpades++;
-                    break;
-                case CLUBS:
-                    noOfClubs++;
-                    break;
-                case DIAMONDS:
-                    noOfDiamonds++;
-                    break;
-            }
-        }
-        return (noOfClubs >= 5 || noOfSpades >= 5 || noOfHearts >= 5 || noOfDiamonds >= 5);
+        return cartas.stream().allMatch(e -> e.getNaipe().getValor().equals(cartas.get(0).getNaipe().getValor()));
+    }
+
+    /**
+     * Verifica se a mão é categorizada como Quadra
+     * Quatro cartas de mesmo valor e uma outra carta como ’kicker’.
+     * @return boolean
+     */
+    public boolean isQuadra(List<Carta> cartas) {
+        cartas.stream().collect(Collectors.groupingBy(c -> c.getNaipe(), Collectors.counting()))
+                .entrySet().stream().filter(t -> t.getValue() > 1).collect(toList());
+        return false;
     }
 
     private boolean isTrinca(List<Carta> cartas) {
@@ -309,31 +325,6 @@ public class PokerHandOO {
         }
         return (isTwoOfAKind && isThreeOfAKind);
 
-    }
-
-    public boolean isQuadra(List<Carta> cartas) {
-        int cardRepeats;
-        boolean isFourOfAKind = false;
-        int i = 0;
-        int k = i + 1;
-        while (i < cartas.size() && !isFourOfAKind) {
-            cardRepeats = 1;
-            while (k < cartas.size() && !isFourOfAKind) {
-                if (cartas.get(i).getRank().getPosicao() == cartas.get(k).getRank().getPosicao()) {
-                    cardRepeats++;
-                    if (cardRepeats == 4) {
-                        isFourOfAKind = true;
-                    }
-                }
-                k++;
-            }
-            i++;
-        }
-        return isFourOfAKind;
-    }
-
-    private boolean isStraightFlush(List<Carta> cartas) {
-        return isFlush(cartas) && isStraight(cartas);
     }
 
     public Carta getHighCard(List<Carta> cartas) {
