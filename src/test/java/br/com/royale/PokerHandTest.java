@@ -7,28 +7,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.lang.reflect.Array;
-import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
 public class PokerHandTest {
-
-    private final ByteArrayOutputStream conteudoDeSaida = new ByteArrayOutputStream();
-    private final ByteArrayOutputStream conteudoDeErro = new ByteArrayOutputStream();
-
-    @Before
-    public void setUp() {
-//        System.setOut(new PrintStream(conteudoDeSaida));
-//        System.setErr(new PrintStream(conteudoDeErro));
-    }
-
-    @After
-    public void tearDown() {
-//        System.setOut(System.out);
-//        System.setErr(System.err);
-    }
 
     private ResultEnum perdeu = ResultEnum.LOSS;
     private ResultEnum ganhou = ResultEnum.WIN;
@@ -121,7 +103,7 @@ public class PokerHandTest {
 
     @Test
     public void Randomico1Test() {
-        Hand1VSHand2Test("Randomico ganha", perdeu, "2S AH 2H AS AC", "JS JD JC JH AD");
+        Hand1VSHand2Test("Randomico perde", perdeu, "2S AH 2H AS AC", "JS JD JC JH AD");
     }
 
     @Test
@@ -131,7 +113,7 @@ public class PokerHandTest {
 
     @Test
     public void Randomico3Test() {
-        Hand1VSHand2Test("Randomico ganha", ganhou, "TC TH 5C 5H KH", "9C 9H 5C 5H AC");
+        Hand1VSHand2Test("Randomico ganha", ganhou, "TH TH TH AH AS", "9C 9C 9C 2C 2S");
     }
 
     @Test
@@ -270,6 +252,7 @@ public class PokerHandTest {
         String[] columnNames = {
                 "pokerHand1",
                 "pokerHand2",
+                "esperado",
                 "resultado",
         };
 
@@ -277,17 +260,18 @@ public class PokerHandTest {
         if (listaCartasPokerHand1.length == listaCartasPokerHand2.length) {
 
             Object[][] matrix = new Object[listaCartasPokerHand1.length][columnNames.length];
-//            for (int i = 0; i < matrix.length; i++) {
-//                matrix[i][0] = listaCartasPokerHand1[i];
-//                matrix[i][1] = listaCartasPokerHand2[i];
-//                matrix[i][2] = new PokerHandOO(listaCartasPokerHand1[i]).compareWith(new PokerHandOO(listaCartasPokerHand2[i])).toString();
-//            }
+            for (int i = 0; i < matrix.length; i++) {
+                matrix[i][0] = listaCartasPokerHand1[i];
+                matrix[i][1] = listaCartasPokerHand2[i];
+                matrix[i][2] = listaRestulatos[i];
+                matrix[i][3] = new PokerHand(listaCartasPokerHand1[i]).compareWith(new PokerHand(listaCartasPokerHand2[i])).toString();
+            }
             TextTable tt = new TextTable(columnNames, matrix);
             // adiciona numeros ao lado esquerdo de cada coluna
             tt.setAddRowNumbering(true);
             // sort pela terceira coluna
             tt.setSort(2);
-//            tt.printTable();
+            tt.printTable();
 
 
             for (int i = 0; i < matrix.length; i++) {
@@ -295,15 +279,13 @@ public class PokerHandTest {
                 Hand1VSHand2Test("É esperado que", listaRestulatos[i], listaCartasPokerHand1[i], listaCartasPokerHand2[i]);
             }
 
-            tt.printTable();
         }
 
     }
 
     private void Hand1VSHand2Test(String descricao, ResultEnum expected, String pokerHand1, String pokerHand2) {
         System.out.println(descricao + ": " + pokerHand1 + " " + expected.toString() + " de " + pokerHand2);
-        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHandOO(pokerHand1).compareWith(new PokerHandOO(pokerHand2)).toString());
-//        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHand(pokerHand1).compareWith(new PokerHand(pokerHand2)).toString());
+        Assert.assertEquals(descricao + ": ", expected.toString(),  new PokerHand(pokerHand1).compareWith(new PokerHand(pokerHand2)).toString());
     }
 
 }

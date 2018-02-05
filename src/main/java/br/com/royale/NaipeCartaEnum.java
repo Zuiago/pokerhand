@@ -26,7 +26,7 @@ public enum NaipeCartaEnum {
     }
 
     public static NaipeCartaEnum find(String valor) {
-        return Arrays.stream(NaipeCartaEnum.values())
+        return Arrays.stream(values())
                 .filter(e -> e.getValor().equals(valor))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(String.format("Tipo não suportado para o valor %s.", valor)));
