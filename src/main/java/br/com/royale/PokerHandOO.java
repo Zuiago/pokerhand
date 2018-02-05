@@ -3,54 +3,24 @@ package br.com.royale;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
-/*
-Boa tarde, Iago.
-
-
-Todos os testes passaram com sucesso, entretanto, os seguintes problemas foram encontrados:
-
-- Os testes deveriam utilizar assert para fazer a verificação real dos resultados. Foi necessário pegar a tabela gerada e comparar com os resultados esperados para verificar se os testes estavam passando.
-- Houve uso direto do ArrayList na definição de variáveis e parâmetros de métodos. Sempre deve-se dar preferência para utilizar uma abstração no lugar da classe concreta (List ou Collection nesse caso). Código criado utilizando a implementação no lugar da interface acaba ficando acoplado a essa implementação. Um exemplo seria um método que recebe uma ArrayList. Caso uma outra parte do código tivesse um LinkedList, seria necessário converter para ArrayList para invocar tal método.
-- Não foi criada uma abstração para representar uma Carta (a qual teria seu valor e naipe). Ao invés disso, as cartas foram mantidas como texto. Além disso gerar um problema de representação, também gera muitos dos problemas subsequentes.
-- Os atributos expostos por uma PokeHandOO (através de getter) ficaram confusos. Para o restante do código, uma PokeHandOO tem um construtor que aceita String e dois atributos: rank (inteiro) e maiores naipes (uma lista de inteiros). Isso demonstra mais um problema de representação, dessa vez do objeto PokeHandOO. O que se esperaria de uma mão de poker seria um atributo com uma coleção de cartas presentes nela. Poderia também possuir um atributo com sua categoria (royal flush, dupla, etc.).
-- Foi utilizado inteiro para representar o "rank" da carta. Dessa forma, fica confuso para ler códigos que manipulem essa variável, visto que deve-se consultar o construtor ou os comentários para saber o que cada número se refere. Deve-se notar que o código deve ser claro o suficiente sem que sejam necessários comentários. Os comentários deveriam ser exceção, utilizados apenas para esclarecer casos mais complexos e não para identificar o que significa o que é um valor de uma variável.
-- O método compare() recebe desnecessariamente o tamanho das listas. Visto que ele é invocado apenas em caso de empate de categoria, é esperado que as listas possuam o mesmo tamanho.
-- Houve muita repetição de código e quase nenhuma reutilização de código (exceto pelo teste de isStraight e isFlush). Cada método verificava manualmente utilizando índices fixos cada possível combinação dos tipos. Isso gerou repetição de código até dentro de um mesmo código. Um exemplo é o isTrinca(), que tem exatamente o mesmo código três vezes, mudando apenas os índices utilizados. Isso se repetiu em praticamente todos os métodos, ficando ainda mais evidente no método isUmPar(), que repete o mesmo código quatro vezes. Além dessa repetição interna nos métodos, não foi reutilizado código para decidir as categorias. Vale notar que existem apenas três lógicas globais para decidir se uma mão de poker está em uma categoria: straight, flush e grupo (cartas de mesmo naipe). Logo, se fossem criados métodos com essas três lógicas, todos os outros métodos ficariam muito mais simples. O método de quadra poderia verificar se existe um grupo de 4 cartas, o de duas duplas verificaria se existem 2 grupos de 2 cartas, o de full house verificaria se existe um grupo de 2 cartas e um grupo de 3 cartas, etc. Logo, havia muita oportunidade para reutilização de código.
-- Sobre o uso direto de índices nas categorias, ainda vale lembrar que existem formas mais eficientes e legíveis de se fazer operações em coleções. Recomenda-se o uso de Stream do Java 8 ou técnicas parecidas. Um exemplo seria o uso do groupBy() que automaticamente agrupa objetos de uma lista baseado em um dos atributos.
-
-
-use streams do java8
-faça metodos pequenos e com responsabilidades bem divididas
-crie a classe Card rsrsrs
-no mais é isso que eu te aconselharia
-pense em manutenabilidade e facilidade de evoluir a solução
-com esses parametros vc vai fazer um bom código
-
-ahhh
-tem uma coisa
-use interfaces cara
-principalmente pra referenciar estrutura de dados
-c tava usando ArrayList pra declarar variavel
-não faça isso
-rsrsrsrs
-
-*/
-
-
 public class PokerHandOO {
 
-    private final List<Carta> hand = new ArrayList<Carta>();
+    private final List<Carta> hand = new ArrayList<>();
     private CategoriaPokerHandEnum categoriaPokerHandEnum;
-    // quarda os tipos de cartas descendentemente
-    private ArrayList<Integer> maioresNaipes = new ArrayList<Integer>();
+    private List<Integer> maioresValores = new ArrayList<>();
+    List<Integer> posicoes = new ArrayList<>();
+    private Integer primeiraPosicao = null;
+    private Integer segundaPosicao = null;
+    private Integer terceiraPosicao = null;
+    private Integer quartaPosicao = null;
+    private Integer quintaPosicao = null;
 
     /**
      * Constructor
@@ -60,8 +30,9 @@ public class PokerHandOO {
     public PokerHandOO(String stringCartas) {
         stringCartasParaObjetoCartas(StringUtils.split(stringCartas, " "), this.hand);
         sortCartasPorTipo(this.hand);
+        this.posicoes = this.hand.stream().map(c -> c.getRank().getPosicao()).collect(toList());
+        atribuirPosicoes();
         this.categoriaPokerHandEnum = determinePokerRank(this.hand);
-
     }
 
     public CategoriaPokerHandEnum determinePokerRank(List<Carta> cartas) {
@@ -70,35 +41,35 @@ public class PokerHandOO {
         } else if (isStraightFlush(cartas)) {
             return CategoriaPokerHandEnum.STRAIGHT_FLUSH;
         } else if (isQuadra(cartas)) {
+            adicionarMaioresValoresQuadra();
             return CategoriaPokerHandEnum.QUADRA;
-        } else if (isFullHouse(cartas)) {
-            return CategoriaPokerHandEnum.FULL_HOUSE;
         } else if (isFlush(cartas)) {
+            adicionarMaioresValores();
             return CategoriaPokerHandEnum.FLUSH;
         } else if (isStraight(cartas)) {
+            adicionarMaioresValores();
             return CategoriaPokerHandEnum.STRAIGHT;
         } else if (isTrinca(cartas)) {
-            return CategoriaPokerHandEnum.TRINCA;
+            if (isFullHouse(cartas)) {
+                adicionarMaioresValoresFullHouse();
+                return CategoriaPokerHandEnum.FULL_HOUSE;
+            } else {
+                adicionarMaioresValoresTrinca();
+                return CategoriaPokerHandEnum.TRINCA;
+            }
         } else if (isDoisPares(cartas)) {
+            adicionarMaioresValoresDoisPares();
             return CategoriaPokerHandEnum.DOIS_PARES;
         } else if (isUmPar(cartas)) {
+            adicionarMaioresValoresUmPar();
             return CategoriaPokerHandEnum.UM_PAR;
         } else {
+            adicionarMaioresValores();
             return CategoriaPokerHandEnum.CARTA_ALTA;
         }
-
     }
 
-    private void stringCartasParaObjetoCartas(String[] cartas, List<Carta> hand) {
-        for (String cartaString : cartas) {
-            String valorCarta = StringUtils.substring(cartaString, 0, 1);
-            NaipeCartaEnum naipe = NaipeCartaEnum.find(StringUtils.substring(cartaString, 1, 2));
-            RankCartaEnum rank = RankCartaEnum.find(StringUtils.substring(cartaString, 0, 1));
-            hand.add(new Carta(valorCarta, naipe, rank));
-        }
-    }
-
-    private static ResultEnum compare(ArrayList<Integer> lista1, ArrayList<Integer> lista2, int tamanho) {
+    private static ResultEnum compare(List<Integer> lista1, List<Integer> lista2, int tamanho) {
         for (int i = 0; i < tamanho; i++) {
             if (lista1.get(i) > lista2.get(i)) {
                 return ResultEnum.WIN;
@@ -109,7 +80,6 @@ public class PokerHandOO {
 
         return ResultEnum.DRAW;
     }
-
 
     public ResultEnum compareWith(PokerHandOO pokeHandOO) {
 
@@ -123,30 +93,35 @@ public class PokerHandOO {
                 case STRAIGHT_FLUSH:
                 case STRAIGHT:
                     // No caso Straight Flush, Straight or Flush
-                    return compare(this.getMaioresNaipes(), pokeHandOO.getMaioresNaipes(), 1);
+                    return compare(this.maioresValores, pokeHandOO.maioresValores, 1);
                 case QUADRA:
                 case FULL_HOUSE:
-                    // No caso de  Quadra e Full House
-                    return compare(this.getMaioresNaipes(), pokeHandOO.getMaioresNaipes(), 2);
+                    // No caso de Quadra e Full House
+                    return compare(this.maioresValores, pokeHandOO.maioresValores, 2);
                 case TRINCA:
                 case DOIS_PARES:
-                    // No caso de Trinca e Dois pares
-                    return compare(this.getMaioresNaipes(), pokeHandOO.getMaioresNaipes(), 3);
+                    // No caso de Trinca e Dois Pares
+                    return compare(this.maioresValores, pokeHandOO.maioresValores, 3);
                 case UM_PAR:
-                    // No caso de Um par
-                    return compare(this.getMaioresNaipes(), pokeHandOO.getMaioresNaipes(), 4);
+                    // No caso de UmPar
+                    return compare(this.maioresValores, pokeHandOO.maioresValores, 4);
                 case FLUSH:
                 case CARTA_ALTA:
                     // No caso de Flush e Carta Alta
-                    return compare(this.getMaioresNaipes(), pokeHandOO.getMaioresNaipes(), 5);
+                    return compare(this.maioresValores, pokeHandOO.maioresValores, 5);
                 default:
                     return ResultEnum.DRAW;
             }
         }
     }
 
-
-    public boolean isRoyalFlush(List<Carta> cartas) {
+    /**
+     * Verifica se a mão é categorizada como Royal Flush.
+     * Ela é composta pelo ás, rei, dama, valete e dez, todos do mesmo naip
+     *
+     * @return boolean
+     */
+    private boolean isRoyalFlush(List<Carta> cartas) {
         if (isStraight(cartas) && isFlush(cartas)) {
             boolean aceExists = false, kingExists = false, queenExists = false, jackExists = false, tenExists = false;
             for (Carta c : cartas) {
@@ -177,6 +152,7 @@ public class PokerHandOO {
     /**
      * Verifica se a mão é categorizada como StraightFlush.
      * Cinco cartas de naipes diferentes em sequência
+     *
      * @return boolean
      */
     private boolean isStraightFlush(List<Carta> cartas) {
@@ -184,11 +160,42 @@ public class PokerHandOO {
     }
 
     /**
-     * Verifica se a mão é categorizada como Straight.
-     * Cinco cartas de naipes diferentes em sequência
+     * Verifica se a mão é categorizada como Quadra
+     * Quatro cartas de mesmo valor e uma outra carta como ’kicker’.
+     *
      * @return boolean
      */
-    public boolean isStraight(List<Carta> cartas) {
+    private boolean isQuadra(List<Carta> cartas) {
+        return isMesmoValor(4, cartas);
+    }
+
+    /**
+     * Verifica se a mão é categorizada como Quadra
+     * Três cartas do mesmo valor e duas outras cartas diferentes também de mesmo valor.
+     *
+     * @return boolean
+     */
+    private boolean isFullHouse(List<Carta> cartas) {
+        return (isUmPar(cartas) && isTrinca(cartas));
+    }
+
+    /**
+     * Verifica se a mão é categorizada como flush
+     * Cinco cartas de mesmos naipes, não em sequência
+     *
+     * @return boolean
+     */
+    private boolean isFlush(List<Carta> cartas) {
+        return cartas.stream().allMatch(e -> e.getNaipe().getValor().equals(cartas.get(0).getNaipe().getValor()));
+    }
+
+    /**
+     * Verifica se a mão é categorizada como Straight.
+     * Cinco cartas em sequência
+     *
+     * @return boolean
+     */
+    private boolean isStraight(List<Carta> cartas) {
         int noOfCardsInARow = 0;
         int pos = 0;
         boolean isAStraight = false;
@@ -205,137 +212,168 @@ public class PokerHandOO {
                 pos++;
             }
         }
+
         return isAStraight;
     }
 
     /**
-     * Verifica se a mão é categorizada como flush
-     * Cinco cartas de mesmos naipes, não em sequência
+     * Verifica se a mão é categorizada como Trinca
+     * Três cartas de mesmo valor e duas outras cartas não relacionadas.
+     *
      * @return boolean
      */
-    public boolean isFlush(List<Carta> cartas) {
-        return cartas.stream().allMatch(e -> e.getNaipe().getValor().equals(cartas.get(0).getNaipe().getValor()));
+    private boolean isTrinca(List<Carta> cartas) {
+        return isMesmoValor(3, cartas);
     }
 
     /**
-     * Verifica se a mão é categorizada como Quadra
-     * Quatro cartas de mesmo valor e uma outra carta como ’kicker’.
+     * Verifica se a mão é categorizada como DoisPares
+     * Duas cartas de mesmo valor, duas outras cartas de mesmo valor e o ’kicker’.
+     *
      * @return boolean
      */
-    public boolean isQuadra(List<Carta> cartas) {
-        cartas.stream().collect(Collectors.groupingBy(c -> c.getNaipe(), Collectors.counting()))
-                .entrySet().stream().filter(t -> t.getValue() > 1).collect(toList());
-        return false;
-    }
-
-    private boolean isTrinca(List<Carta> cartas) {
-        int cardRepeats = 1;
-        boolean isThreeOfAKind = false;
-        int i = 0;
-        int k = i + 1;
-        while (i < cartas.size() && !isThreeOfAKind) {
-            cardRepeats = 1;
-            while (k < cartas.size() && !isThreeOfAKind) {
-                if (cartas.get(i).getRank().getPosicao() == cartas.get(k).getRank().getPosicao()) {
-                    cardRepeats++;
-                    if (cardRepeats == 3) {
-                        isThreeOfAKind = true;
-                    }
-                }
-                k++;
-            }
-            i++;
-        }
-        return isThreeOfAKind;
-    }
-
     private boolean isDoisPares(List<Carta> cartas) {
-        int cardRepeats;
-        int noOfCardRepeats = 0;
-        boolean isTwoPair = false;
-        int i = 0;
-        int k = i + 1;
-        while (i < cartas.size() && !isTwoPair) {
-            cardRepeats = 1;
-            while (k < cartas.size() && !isTwoPair) {
-                if (cartas.get(i).getRank().getPosicao() == cartas.get(k).getRank().getPosicao()) {
-                    cardRepeats++;
-                    if (cardRepeats == 2) {
-                        cardRepeats = 1;
-                        noOfCardRepeats++;
-                        if (noOfCardRepeats == 2) {
-                            isTwoPair = true;
-
-                        }
-                    }
-
-                }
-                k++;
-            }
-            i++;
-        }
-        return isTwoPair;
+        final List<Map.Entry<String, Long>> lista = cartas.stream()
+                .collect(Collectors.groupingBy(c -> c.getValor(), Collectors.counting()))
+                .entrySet().stream().filter(t -> t.getValue() == 2).collect(toList());
+        return lista.size() == 2;
     }
 
+    /**
+     * Verifica se a mão é categorizada como DoisPares
+     * Duas cartas de mesmo valor e tr^es outras cartas não relacionadas
+     *
+     * @return boolean
+     */
     private boolean isUmPar(List<Carta> cartas) {
-        int cardRepeats;
-        boolean isPair = false;
-        int i = 0;
-        int k = i + 1;
-        while (i < cartas.size() && !isPair) {
-            cardRepeats = 1;
-            while (k < cartas.size() && !isPair) {
-                if (cartas.get(i).getRank().getPosicao() == cartas.get(k).getRank().getPosicao()) {
-                    cardRepeats++;
-                    if (cardRepeats == 2) {
-                        isPair = true;
-                    }
-                }
-                k++;
-            }
-            i++;
-        }
-        return isPair;
-    }
-    public Comparator<Carta> byRank = (Carta left, Carta right) -> {
-        if (left.getRank().getPosicao() < right.getRank().getPosicao()) {
-            return -1;
-        } else {
-            return 1;
-        }
-    };
-
-    private boolean isFullHouse(List<Carta> cartas) {
-        int noOfRepeats = 1;
-        boolean isThreeOfAKind = false;
-        boolean isTwoOfAKind = false;
-        for (int i = 0; i < cartas.size() - 1; i++) {
-            if (cartas.get(i).getRank().getPosicao() == cartas.get(i + 1).getRank().getPosicao()) {
-                noOfRepeats++;
-                if (noOfRepeats == 3) {
-                    isThreeOfAKind = true;
-                    noOfRepeats = 1;
-                } else if (noOfRepeats == 2) {
-                    isTwoOfAKind = true;
-                    noOfRepeats = 1;
-                }
-            } else {
-                noOfRepeats = 1;
-            }
-        }
-        return (isTwoOfAKind && isThreeOfAKind);
-
+        return isMesmoValor(2, cartas);
     }
 
-    public Carta getHighCard(List<Carta> cartas) {
-        return cartas.get(0);
+    private boolean isMesmoValor(int qtdValor, List<Carta> cartas) {
+        Optional<Map.Entry<String, Long>> first = cartas.stream()
+                .collect(Collectors.groupingBy(c -> c.getValor(), Collectors.counting()))
+                .entrySet().stream().filter(t -> t.getValue() == qtdValor).findFirst();
+        return (first.isPresent() && first.get().getValue() == qtdValor);
     }
 
     private void sortCartasPorTipo(List<Carta> listaCartas) {
         listaCartas.sort(Carta::comparePorPosicao);
     }
 
-    public ArrayList<Integer> getMaioresNaipes() {
-        return this.maioresNaipes;
+    private void adicionarMaioresValores() {
+        this.posicoes.sort(Collections.reverseOrder());
+        this.maioresValores.addAll(posicoes);
+    }
+
+    private void adicionarMaioresValoresQuadra() {
+        if (this.posicoes.get(1) == posicoes.get(4)){
+            this.posicoes.sort(Collections.reverseOrder());
+        }
+        this.maioresValores.addAll(posicoes.stream().distinct().collect(toList()));
+    }
+
+    private void adicionarMaioresValoresTrinca() {
+        Optional<Integer> firstRepeat = this.posicoes.stream().filter( (e) -> e > 1).findFirst();
+        this.maioresValores.add(this.posicoes.get(firstRepeat.get()));
+    }
+
+    private void adicionarMaioresValoresFullHouse() {
+
+        if (this.maioresValores.size() > 0){
+            // da 1ª até a 3ª carta
+            if (this.maioresValores.get(0) == this.primeiraPosicao) {
+                if (this.quartaPosicao == this.quintaPosicao) {
+                    this.maioresValores.add(this.quartaPosicao);
+                } else {
+                    this.maioresValores.add(this.quintaPosicao);
+                    this.maioresValores.add(this.quartaPosicao);
+                }
+            }
+
+            // da 2ª até a 4ª carta
+            if (this.maioresValores.get(0) == this.segundaPosicao) {
+                this.maioresValores.add(this.quintaPosicao);
+                this.maioresValores.add(this.primeiraPosicao);
+            }
+
+            // da 3ª até a 5ª carta
+            if (this.maioresValores.get(0) == this.terceiraPosicao) {
+                if (this.primeiraPosicao == this.segundaPosicao) {
+                    this.maioresValores.add(this.primeiraPosicao);
+                } else {
+                    this.maioresValores.add(this.segundaPosicao);
+                    this.maioresValores.add(this.primeiraPosicao);
+                }
+            }
+        }
+    }
+
+    private void adicionarMaioresValoresDoisPares() {
+
+        // da primeira e a segunda carta, e também da terceira e a quarta carta
+        if (this.primeiraPosicao == this.segundaPosicao && this.terceiraPosicao == this.quartaPosicao) {
+            this.maioresValores.add(this.terceiraPosicao);
+            this.maioresValores.add(this.primeiraPosicao);
+            this.maioresValores.add(this.quintaPosicao);
+        }
+
+        // da primeira e a segunda carta, e também da quarta e a quinta carta
+        if (this.primeiraPosicao == this.segundaPosicao && this.quartaPosicao == this.quintaPosicao) {
+            this.maioresValores.add(this.quartaPosicao);
+            this.maioresValores.add(this.primeiraPosicao);
+            this.maioresValores.add(this.terceiraPosicao);
+        }
+
+        // da segunda e a terceira carta, e também da quarta e a quinta carta
+        if (this.segundaPosicao == this.terceiraPosicao && this.quartaPosicao == this.quintaPosicao) {
+            this.maioresValores.add(this.quartaPosicao);
+            this.maioresValores.add(this.segundaPosicao);
+            this.maioresValores.add(this.primeiraPosicao);
+        }
+
+    }
+
+    private void adicionarMaioresValoresUmPar() {
+        if (this.primeiraPosicao == this.segundaPosicao) {
+            this.maioresValores.add(this.primeiraPosicao);
+            this.maioresValores.add(this.quintaPosicao);
+            this.maioresValores.add(this.quartaPosicao);
+            this.maioresValores.add(this.terceiraPosicao);
+        }
+        if (this.segundaPosicao == this.terceiraPosicao) {
+            this.maioresValores.add(this.segundaPosicao);
+            this.maioresValores.add(this.quintaPosicao);
+            this.maioresValores.add(this.quartaPosicao);
+            this.maioresValores.add(this.primeiraPosicao);
+        }
+        if (this.terceiraPosicao == this.quartaPosicao) {
+            this.maioresValores.add(this.terceiraPosicao);
+            this.maioresValores.add(this.quintaPosicao);
+            this.maioresValores.add(this.segundaPosicao);
+            this.maioresValores.add(this.primeiraPosicao);
+        }
+        if (this.quartaPosicao == this.quintaPosicao) {
+            this.maioresValores.add(this.quartaPosicao);
+            this.maioresValores.add(this.terceiraPosicao);
+            this.maioresValores.add(this.segundaPosicao);
+            this.maioresValores.add(this.primeiraPosicao);
+        }
+    }
+
+    private void stringCartasParaObjetoCartas(String[] cartas, List<Carta> hand) {
+        for (String cartaString : cartas) {
+            String valorCarta = StringUtils.substring(cartaString, 0, 1);
+            NaipeCartaEnum naipe = NaipeCartaEnum.find(StringUtils.substring(cartaString, 1, 2));
+            RankCartaEnum rank = RankCartaEnum.find(StringUtils.substring(cartaString, 0, 1));
+            hand.add(new Carta(valorCarta, naipe, rank));
+        }
+    }
+
+    private void atribuirPosicoes() {
+        this.primeiraPosicao = this.posicoes.get(0);
+        this.segundaPosicao = this.posicoes.get(1);
+        this.terceiraPosicao = this.posicoes.get(2);
+        this.quartaPosicao = this.posicoes.get(3);
+        this.quintaPosicao = this.posicoes.get(4);
     }
 }
